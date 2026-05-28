@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FVG Scanner</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>FVG Scanner</h1>
+      <div class="header-actions">
+        <button id="scan-btn" class="btn btn-primary">Scan Now</button>
+        <span id="last-scan"></span>
+      </div>
+    </header>
+
+    <div class="layout">
+      <!-- Watchlist Panel -->
+      <aside class="panel watchlist-panel">
+        <h2>Watchlist</h2>
+        <form id="add-form">
+          <input id="symbol-input" type="text" placeholder="Symbol (e.g. AAPL, BTC)" required />
+          <select id="type-select">
+            <option value="stock">Stock</option>
+            <option value="crypto">Crypto</option>
+          </select>
+          <select id="timeframe-select">
+            <option value="1m">1 min</option>
+            <option value="5m">5 min</option>
+            <option value="15m">15 min</option>
+            <option value="1h">1 hour</option>
+            <option value="4h" selected>4 hour</option>
+            <option value="6h">6 hour</option>
+            <option value="1d">1 day</option>
+            <option value="1w">1 week</option>
+          </select>
+          <button type="submit" class="btn btn-add">Add</button>
+        </form>
+        <ul id="watchlist"></ul>
+      </aside>
+
+      <!-- Alerts Panel -->
+      <main class="panel alerts-panel">
+        <div class="alerts-header">
+          <h2>FVG Alerts</h2>
+          <div class="filters">
+            <select id="filter-symbol">
+              <option value="">All symbols</option>
+            </select>
+            <select id="filter-direction">
+              <option value="">All directions</option>
+              <option value="bullish">Bullish</option>
+              <option value="bearish">Bearish</option>
+            </select>
+            <label class="toggle-label">
+              <input type="checkbox" id="filter-mitigated" /> Show mitigated
+            </label>
+          </div>
+        </div>
+        <div id="alerts-container">
+          <p class="empty-state">No FVGs detected yet. Add symbols and run a scan.</p>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
