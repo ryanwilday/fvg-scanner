@@ -57,6 +57,22 @@
             <label class="toggle-label">
               <input type="checkbox" id="filter-mitigated" /> Show mitigated
             </label>
+            <select id="setting-timezone" title="Display timezone">
+              <option value="America/New_York" selected>New York (ET)</option>
+              <option value="America/Chicago">Chicago (CT)</option>
+              <option value="America/Denver">Denver (MT)</option>
+              <option value="America/Los_Angeles">Los Angeles (PT)</option>
+              <option value="UTC">UTC</option>
+              <option value="Europe/London">London</option>
+              <option value="Europe/Paris">Paris (CET)</option>
+              <option value="Asia/Tokyo">Tokyo (JST)</option>
+              <option value="Asia/Shanghai">Shanghai (CST)</option>
+              <option value="Australia/Sydney">Sydney (AEST)</option>
+            </select>
+            <label class="toggle-label" title="Max signals shown per symbol">
+              Per symbol:
+              <input type="number" id="setting-per-symbol" value="1" min="1" max="50" style="width:46px;padding:4px 6px;" />
+            </label>
           </div>
         </div>
         <div id="alerts-container">

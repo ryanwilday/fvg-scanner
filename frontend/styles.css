@@ -149,7 +149,8 @@ h2 { font-size: 14px; font-weight: 600; color: var(--text-muted); text-transform
   gap: 8px;
 }
 
-.filters select {
+.filters select,
+.filters input[type="number"] {
   background: var(--bg);
   border: 1px solid var(--border);
   border-radius: var(--radius);

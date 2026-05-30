@@ -78,13 +78,48 @@ document.getElementById("add-form").addEventListener("submit", async (e) => {
 });
 
 // ---------------------------------------------------------------------------
+// Settings (persisted to localStorage)
+// ---------------------------------------------------------------------------
+function getSetting(id, fallback) {
+  return localStorage.getItem(`fvg_${id}`) ?? fallback;
+}
+
+function saveSetting(id, value) {
+  localStorage.setItem(`fvg_${id}`, value);
+}
+
+function initSettings() {
+  const tz = document.getElementById("setting-timezone");
+  const ps = document.getElementById("setting-per-symbol");
+  tz.value = getSetting("timezone", "America/New_York");
+  ps.value = getSetting("per_symbol", "1");
+
+  tz.addEventListener("change", () => { saveSetting("timezone", tz.value); loadAlerts(); });
+  ps.addEventListener("change", () => { saveSetting("per_symbol", ps.value); loadAlerts(); });
+}
+
+// ---------------------------------------------------------------------------
 // Alerts
 // ---------------------------------------------------------------------------
 function formatTime(iso) {
-  const d = new Date(iso);
-  return d.toLocaleString(undefined, {
+  // Append Z so JS always parses the backend UTC string as UTC
+  const d = new Date(iso.endsWith("Z") ? iso : iso + "Z");
+  const tz = document.getElementById("setting-timezone").value;
+  return d.toLocaleString("en-US", {
+    timeZone: tz,
     month: "short", day: "numeric",
     hour: "2-digit", minute: "2-digit",
+    timeZoneName: "short",
+  });
+}
+
+function applyPerSymbolLimit(alerts) {
+  const limit = parseInt(document.getElementById("setting-per-symbol").value, 10) || 1;
+  const counts = {};
+  return alerts.filter((a) => {
+    const key = `${a.symbol}_${a.timeframe}_${a.direction}`;
+    counts[key] = (counts[key] || 0) + 1;
+    return counts[key] <= limit;
   });
 }
 
@@ -97,10 +132,11 @@ async function loadAlerts() {
   if (symbol) params.set("symbol", symbol);
   if (direction) params.set("direction", direction);
   if (!showMitigated) params.set("mitigated", "false");
-  params.set("limit", "200");
+  params.set("limit", "500");
 
   const res = await fetch(`${API}/api/alerts?${params}`);
-  const alerts = await res.json();
+  let alerts = await res.json();
+  alerts = applyPerSymbolLimit(alerts);
 
   const container = document.getElementById("alerts-container");
   if (!alerts.length) {
@@ -164,5 +200,6 @@ setInterval(loadAlerts, 60_000);
 // ---------------------------------------------------------------------------
 // Init
 // ---------------------------------------------------------------------------
+initSettings();
 loadWatchlist();
 loadAlerts();
