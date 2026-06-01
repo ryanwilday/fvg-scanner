@@ -115,14 +115,17 @@ def run_scan_for_timeframe(timeframe: str):
                     )
                     db.add(alert)
 
-        # Update mitigation status for active alerts
+        # Update mitigation status — fetch each symbol's price once, not once per alert
         active_alerts = db.query(FVGAlert).filter(
             FVGAlert.mitigated == False,
             FVGAlert.timeframe == timeframe,
         ).all()
 
+        price_cache: dict = {}
         for alert in active_alerts:
-            price = fetch_current_price(alert.symbol, alert.asset_type)
+            if alert.symbol not in price_cache:
+                price_cache[alert.symbol] = fetch_current_price(alert.symbol, alert.asset_type)
+            price = price_cache[alert.symbol]
             if price and check_mitigation({"gap_top": alert.gap_top, "gap_bottom": alert.gap_bottom}, price):
                 alert.mitigated = True
 
