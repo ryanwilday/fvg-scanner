@@ -236,7 +236,7 @@ def get_alerts(
     if days_back is not None:
         from datetime import timedelta
         cutoff = datetime.utcnow() - timedelta(days=days_back)
-        query = query.filter(FVGAlert.detected_at >= cutoff)
+        query = query.filter(FVGAlert.candle_time >= cutoff)
     return query.order_by(FVGAlert.detected_at.desc()).limit(limit).all()
 
 
