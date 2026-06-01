@@ -91,11 +91,14 @@ function saveSetting(id, value) {
 function initSettings() {
   const tz = document.getElementById("setting-timezone");
   const ps = document.getElementById("setting-per-symbol");
+  const db = document.getElementById("filter-days-back");
   tz.value = getSetting("timezone", "America/New_York");
   ps.value = getSetting("per_symbol", "1");
+  db.value = getSetting("days_back", "1");
 
   tz.addEventListener("change", () => { saveSetting("timezone", tz.value); loadAlerts(); });
   ps.addEventListener("change", () => { saveSetting("per_symbol", ps.value); loadAlerts(); });
+  db.addEventListener("change", () => { saveSetting("days_back", db.value); loadAlerts(); });
 }
 
 // ---------------------------------------------------------------------------
@@ -128,10 +131,13 @@ async function loadAlerts() {
   const direction = document.getElementById("filter-direction").value;
   const showMitigated = document.getElementById("filter-mitigated").checked;
 
+  const daysBack = parseInt(document.getElementById("filter-days-back").value, 10) || 1;
+
   const params = new URLSearchParams();
   if (symbol) params.set("symbol", symbol);
   if (direction) params.set("direction", direction);
   if (!showMitigated) params.set("mitigated", "false");
+  params.set("days_back", daysBack);
   params.set("limit", "500");
 
   const res = await fetch(`${API}/api/alerts?${params}`);

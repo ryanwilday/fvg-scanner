@@ -222,6 +222,7 @@ def get_alerts(
     symbol: Optional[str] = None,
     direction: Optional[str] = None,
     mitigated: Optional[bool] = None,
+    days_back: Optional[int] = None,
     limit: int = 100,
     db: Session = Depends(get_db),
 ):
@@ -232,6 +233,10 @@ def get_alerts(
         query = query.filter(FVGAlert.direction == direction)
     if mitigated is not None:
         query = query.filter(FVGAlert.mitigated == mitigated)
+    if days_back is not None:
+        from datetime import timedelta
+        cutoff = datetime.utcnow() - timedelta(days=days_back)
+        query = query.filter(FVGAlert.detected_at >= cutoff)
     return query.order_by(FVGAlert.detected_at.desc()).limit(limit).all()
 
 
