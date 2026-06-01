@@ -13,7 +13,7 @@ import os
 
 from database import init_db, get_db, WatchlistItem, FVGAlert
 from scanner import detect_fvgs, check_mitigation
-from data_fetcher import fetch_candles, fetch_current_price
+from data_fetcher import fetch_candles, fetch_current_price, fetch_stock_candles_batch
 import scheduler as sched
 
 app = FastAPI(title="FVG Scanner")
@@ -77,8 +77,19 @@ def run_scan_for_timeframe(timeframe: str):
             WatchlistItem.timeframe == timeframe,
         ).all()
 
+        # Batch fetch all stocks in one API call to avoid rate limiting
+        stock_items = [i for i in items if i.asset_type == "stock"]
+        crypto_items = [i for i in items if i.asset_type == "crypto"]
+
+        candle_map = {}
+        if stock_items:
+            batch = fetch_stock_candles_batch([i.symbol for i in stock_items], timeframe)
+            candle_map.update(batch)
+        for item in crypto_items:
+            candle_map[item.symbol] = fetch_candles(item.symbol, item.asset_type, item.timeframe)
+
         for item in items:
-            candles = fetch_candles(item.symbol, item.asset_type, item.timeframe)
+            candles = candle_map.get(item.symbol, [])
             if len(candles) < 3:
                 continue
 

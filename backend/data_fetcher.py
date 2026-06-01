@@ -9,16 +9,15 @@ from scanner import TIMEFRAME_MAP
 # Stocks via yfinance (~15 min delayed, free)
 # ---------------------------------------------------------------------------
 
-def fetch_stock_candles(symbol: str, timeframe: str) -> List[Dict[str, Any]]:
-    yf_interval, yf_period = TIMEFRAME_MAP.get(timeframe, ("1h", "30d"))
-    ticker = yf.Ticker(symbol)
-    df = ticker.history(period=yf_period, interval=yf_interval, auto_adjust=True)
-    if df.empty:
+def _df_to_candles(df) -> List[Dict[str, Any]]:
+    if df is None or df.empty:
         return []
     df = df.reset_index()
     candles = []
     for _, row in df.iterrows():
-        ts = row["Datetime"] if "Datetime" in row else row["Date"]
+        ts = row.get("Datetime") or row.get("Date")
+        if ts is None:
+            continue
         if hasattr(ts, "to_pydatetime"):
             ts = ts.to_pydatetime()
         candles.append({
@@ -29,6 +28,39 @@ def fetch_stock_candles(symbol: str, timeframe: str) -> List[Dict[str, Any]]:
             "close": float(row["Close"]),
         })
     return candles
+
+
+def fetch_stock_candles(symbol: str, timeframe: str) -> List[Dict[str, Any]]:
+    yf_interval, yf_period = TIMEFRAME_MAP.get(timeframe, ("1h", "30d"))
+    ticker = yf.Ticker(symbol)
+    df = ticker.history(period=yf_period, interval=yf_interval, auto_adjust=True)
+    return _df_to_candles(df)
+
+
+def fetch_stock_candles_batch(symbols: List[str], timeframe: str) -> Dict[str, List[Dict[str, Any]]]:
+    """Fetch multiple stock symbols in a single API call to avoid rate limiting."""
+    if not symbols:
+        return {}
+    yf_interval, yf_period = TIMEFRAME_MAP.get(timeframe, ("1h", "30d"))
+    raw = yf.download(
+        tickers=" ".join(symbols),
+        period=yf_period,
+        interval=yf_interval,
+        auto_adjust=True,
+        group_by="ticker",
+        progress=False,
+        threads=False,
+    )
+    result = {}
+    if len(symbols) == 1:
+        result[symbols[0]] = _df_to_candles(raw)
+    else:
+        for sym in symbols:
+            try:
+                result[sym] = _df_to_candles(raw[sym])
+            except Exception:
+                result[sym] = []
+    return result
 
 
 # ---------------------------------------------------------------------------
